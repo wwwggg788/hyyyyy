@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蛋黄君爆裂雨</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      overflow: hidden;
+      height: 100vh;
+      background: linear-gradient(to bottom, #bfdbfe, #93c5fd);
+    }
+
+    .yolk {
+      position: absolute;
+      top: -100px;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    /* 下落动画 */
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(calc(100vh - 100px)) rotate(360deg);
+        opacity: 1;
+      }
+    }
+
+    /* 碎片爆炸动画 */
+    @keyframes explode {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot));
+        opacity: 1;
+      }
+    }
+
+    .fragment {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      background-image: var(--img);
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: explode 0.4s ease-out forwards;
+      opacity: 0.95;
+      z-index: 5;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container" class="relative w-full h-full"></div>
+
+  <script>
+    const container = document.getElementById('container');
+    const yolkImage = 'https://wxw3-1308612517.cos.ap-guangzhou.myqcloud.com/1/1/7445b55d32e5441b9c503f2c408d3ffc.png';
+
+    function createYolk() {
+      const yolk = document.createElement('img');
+      yolk.src = yolkImage;
+      yolk.classList.add('yolk');
+
+      const size = Math.random() * 40 + 40;
+      yolk.style.width = `${size}px`;
+      yolk.style.height = `${size}px`;
+      yolk.style.left = `${Math.random() * 100}%`;
+
+      const fallDuration = Math.random() * 2 + 2;
+      yolk.style.animation = `fall ${fallDuration}s linear forwards`;
+      container.appendChild(yolk);
+
+      // 落地爆裂
+      setTimeout(() => {
+        const rect = yolk.getBoundingClientRect();
+        const yolkX = rect.left + rect.width / 2;
+        const yolkY = rect.top + rect.height - 40;
+
+        // ⚡️立即隐藏原图
+        yolk.style.display = "none";
+
+        // 生成碎片（数量与大小可调）
+        const fragments = 6;
+        for (let i = 0; i < fragments; i++) {
+          const fragment = document.createElement('div');
+          fragment.classList.add('fragment');
+
+          fragment.style.setProperty('--img', `url(${yolkImage})`);
+          fragment.style.setProperty('--size', `${size * 0.8}px`);
+          fragment.style.left = `${yolkX}px`;
+          fragment.style.top = `${yolkY}px`;
+
+          // 碎片飞出角度随机但偏下
+          const angle = (Math.random() * Math.PI) - Math.PI / 2; // 上下方向
+          const distance = Math.random() * 60 + 40; // 飞出距离
+          const tx = Math.cos(angle) * distance + 'px';
+          const ty = Math.abs(Math.sin(angle) * distance * 1.5) + 'px';
+          const rot = Math.random() * 720 - 360 + 'deg';
+
+          fragment.style.setProperty('--tx', tx);
+          fragment.style.setProperty('--ty', ty);
+          fragment.style.setProperty('--rot', rot);
+
+          container.appendChild(fragment);
+        }
+
+        // 不再移除碎片，让它们永久存在
+        setTimeout(() => yolk.remove(), 100);
+
+      }, fallDuration * 1000);
+    }
+
+    function startRain() {
+      for (let i = 0; i < 25; i++) createYolk();
+      setInterval(createYolk, 150);
+    }
+
+    window.addEventListener('load', startRain);
+  </script>
+</body>
+
+</html>
